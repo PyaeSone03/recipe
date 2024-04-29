@@ -1,0 +1,121 @@
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import { Box } from "@mui/material";
+import Typography from "@mui/material/Typography";
+import { Splide, SplideSlide } from "@splidejs/react-splide";
+import "@splidejs/splide/dist/css/splide.min.css";
+import { Link } from "react-router-dom";
+
+const Popular = () => {
+  const [popular, setPopular] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPopular();
+  }, []);
+
+  const getPopular = async () => {
+    try {
+      const check = localStorage.getItem("popular");
+      if (check) {
+        setPopular(JSON.parse(check));
+      } else {
+        const api = await fetch(
+          `https://api.spoonacular.com/recipes/random?apiKey=${process.env.REACT_APP_FOOD_API_KEY}&number=9`
+        );
+        const data = await api.json();
+
+        localStorage.setItem("popular", JSON.stringify(data.recipes));
+        setPopular(data.recipes);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching popular recipes:", error);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <Box sx={{ margin: "4rem 0rem" }}>
+        <h3>Popular Picks</h3>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <Splide
+            options={{
+              perPage: 3,
+              arrows: false,
+              pagination: false,
+              drag: "free",
+              gap: "5rem",
+            }}
+          >
+            {popular.map((recipe) => (
+              <SplideSlide key={recipe.id}>
+                <Box
+                  sx={{
+                    minHeight: "25rem",
+                    borderRadius: "3rem",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <Link to={`/recipe/${recipe.id}`}>
+                    <Typography
+                      sx={{
+                        position: "absolute",
+                        zIndex: "10",
+                        left: "50%",
+                        bottom: "0%",
+                        transform: "translate(-50%,0%)",
+                        color: "white",
+                        width: "100%",
+                        textAlign: "center",
+                        fontWeight: "600",
+                        fontSize: "1rem",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        borderBottomLeftRadius: "rem",
+                        borderBottomRightRadius: "2rem",
+                        padding: "0.5rem",
+                      }}
+                    >
+                      {recipe.title}
+                    </Typography>
+                    <img
+                      src={recipe.image}
+                      alt={recipe.title}
+                      style={{
+                        borderRadius: "3rem",
+                        position: "absolute",
+                        left: "0",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Link>
+                  <Gradient />
+                </Box>
+              </SplideSlide>
+            ))}
+          </Splide>
+        )}
+      </Box>
+    </div>
+  );
+};
+
+const Gradient = styled.div`
+  z-index: 3;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
+`;
+
+export default Popular;
